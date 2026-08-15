@@ -1,0 +1,60 @@
+<ui:FluentWindow
+    x:Class="AiUsageBar.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="AI Usage — Settings"
+    Width="480"
+    Height="400"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round"
+    WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="AI Usage — Settings" />
+
+        <ScrollViewer Grid.Row="1" Padding="18" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Refresh interval (seconds)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4" />
+                <ui:NumberBox
+                    x:Name="PollBox"
+                    Minimum="15"
+                    Maximum="86400"
+                    SmallChange="15"
+                    MaxDecimalPlaces="0"
+                    Width="160"
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,12" />
+
+                <TextBlock Text="Primary (tray tooltip)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4" />
+                <ComboBox x:Name="PrimaryBox" Width="220" HorizontalAlignment="Left" Margin="0,0,0,8" />
+
+                <CheckBox
+                    x:Name="StartupBox"
+                    Content="Start with Windows"
+                    Foreground="{StaticResource TextBrush}"
+                    Margin="0,4,0,16" />
+
+                <Border Background="{StaticResource CardBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Providers Configuration" Foreground="{StaticResource TextBrush}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <TextBlock Text="To add or remove providers, edit the underlying ai-usagebar config.toml file directly." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <ui:Button Content="Open config.toml" HorizontalAlignment="Left" Click="OnOpenConfig" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="18">
+            <ui:Button Content="Close" Click="OnClose" Margin="0,0,10,0" />
+            <ui:Button Content="Save" Appearance="Primary" Click="OnSave" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

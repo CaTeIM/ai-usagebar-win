@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Tray app: a GUI process with no console window. -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>AiUsageBar</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;arm64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <AssemblyName>ai-usagebar-win</AssemblyName>
+    <Version>0.3.0</Version>
+
+    <!-- Distribution is a single self-contained .exe, but those flags
+         (SelfContained / PublishSingleFile / RID) are passed ONLY on the publish
+         command line (see .github/workflows/release.yml). Setting them here
+         unconditionally would force a RID on every `dotnet build`/`dotnet test`
+         and break them. Plain build/test stays framework-dependent. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Modern Fluent UI for WPF (Mica, dark theme, modern controls). -->
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+    <!-- System-tray icon for WPF. -->
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.2.0" />
+    <!-- Generate the severity-tinted tray icon bitmap in code. -->
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+    <!-- TOML config — keeps the existing config.toml format compatible. -->
+    <PackageReference Include="Tomlyn" Version="0.17.0" />
+  </ItemGroup>
+
+</Project>

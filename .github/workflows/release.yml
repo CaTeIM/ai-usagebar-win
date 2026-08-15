@@ -1,0 +1,49 @@
+name: release
+
+# Builds the self-contained, single-file WPF app and publishes the .exe to a
+# GitHub Release whenever you push a version tag, e.g.
+#   git tag v0.3.0 && git push origin v0.3.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      # Single self-contained .exe. The self-contained / single-file / RID flags
+      # live here (publish time) only — putting them in the .csproj would force a
+      # RID on every `dotnet build`/`test` and break them.
+      - name: Publish (win-x64, self-contained, single-file)
+        run: >
+          dotnet publish AiUsageBar/AiUsageBar.csproj
+          -c Release
+          -p:Platform=x64
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish
+
+      - name: Rename .exe with version
+        shell: pwsh
+        run: |
+          Copy-Item publish/ai-usagebar-win.exe `
+            "ai-usagebar-win-${{ github.ref_name }}-x64.exe"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            ai-usagebar-win-${{ github.ref_name }}-x64.exe
+            config.example.toml

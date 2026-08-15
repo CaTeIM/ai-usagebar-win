@@ -1,0 +1,43 @@
+# ai-usagebar-win configuration.
+# Copy to:  %APPDATA%\ai-usagebar\config.toml
+# Everything is optional — defaults enable Anthropic, OpenAI, Z.AI and
+# OpenRouter (DeepSeek is opt-in). Missing file = defaults.
+
+# Seconds between refreshes (minimum 15). Default 60.
+poll_seconds = 60
+
+# Opt-in: let the app refresh the Claude/Codex OAuth tokens and write them back
+# to the CLI credential files when they near expiry. This ROTATES the tokens the
+# `claude` / `codex` CLIs share, so a CLI signed in elsewhere may need to
+# re-login. Off (read-only) by default. Also toggleable in the Settings window.
+# refresh_tokens = false
+
+[ui]
+# Which vendor leads the tray tooltip. Defaults to "anthropic".
+# primary = "anthropic"   # anthropic | openai | zai | openrouter | deepseek
+
+[anthropic]
+enabled = true
+# Read-only. Defaults to %USERPROFILE%\.claude\.credentials.json
+# credentials_path = 'C:\Users\you\.claude\.credentials.json'
+
+[openai]
+enabled = true
+# Read-only. Defaults to %USERPROFILE%\.codex\auth.json
+# codex_auth_path = 'C:\Users\you\.codex\auth.json'
+
+[zai]
+enabled = true
+api_key_env = "ZAI_API_KEY"     # env var checked first
+# api_key = "..."               # inline fallback (chmod/ACL your config!)
+# plan_tier = "pro"             # display-only: lite | pro | max
+
+[openrouter]
+enabled = true
+api_key_env = "OPENROUTER_API_KEY"
+# api_key = "..."
+
+[deepseek]
+enabled = false                 # opt-in
+api_key_env = "DEEPSEEK_API_KEY"
+# api_key = "..."

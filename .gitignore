@@ -15,4 +15,7 @@ BundleArtifacts/
 # Python bytecode from scripts/
 __pycache__/
 
+# The bundled Rust CLI is built by the release workflow, never committed.
+AiUsageBar/Assets/ai-usagebar.exe
+
 .DS_Store

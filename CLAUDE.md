@@ -86,9 +86,10 @@ dotnet run --project AiUsageBar/AiUsageBar.csproj -p:Platform=x64
 
 Or open `AiUsageBar.sln` in Visual Studio, set the platform to x64, press F5.
 
-To exercise the app you also need `ai-usagebar` on `PATH`
-(`cargo install ai-usagebar`). Without it the app still starts and shows a
-"System Error" card explaining the binary is missing.
+For a local build you need `ai-usagebar` on `PATH` (`cargo install ai-usagebar`).
+Local builds do not bundle the CLI, so `CliBinary` falls back to PATH. Without
+it the app still starts and shows a "System Error" card explaining what failed.
+Released builds need none of this: see "Bundled CLI" below.
 
 `dotnet-install.ps1` at the root is the stock Microsoft SDK installer kept for
 convenience. CI does not use it (it uses `actions/setup-dotnet`).
@@ -105,13 +106,36 @@ the app under test is a WPF assembly, so the test project needs `UseWPF`.
 Two files, on purpose. A missing file or parse error falls back to defaults,
 never an exception.
 
-| Setting | File | Owner |
-|---|---|---|
-| `poll_seconds` (refresh interval, default 60, floor 15) | `%APPDATA%\ai-usagebar-win\settings.toml` | this app |
-| `[ui] primary` (vendor leading the tooltip and popup) | `%APPDATA%\ai-usagebar\config\config.toml` | the Rust CLI |
+| Setting                                                 | File                                       | Owner        |
+| ------------------------------------------------------- | ------------------------------------------ | ------------ |
+| `poll_seconds` (refresh interval, default 60, floor 15) | `%APPDATA%\ai-usagebar-win\settings.toml`  | this app     |
+| `[ui] primary` (vendor leading the tooltip and popup)   | `%APPDATA%\ai-usagebar\config\config.toml` | the Rust CLI |
 
 Everything else in the CLI's file (providers, API keys, credentials) belongs to
 the CLI. See `config.example.toml`.
+
+## Bundled CLI
+
+A released build embeds `ai-usagebar.exe`, so a downloaded executable works on a
+clean machine with no Rust toolchain. The pieces:
+
+- `release.yml` runs `cargo install ai-usagebar --locked` on the runner, copies
+  the result to `AiUsageBar/Assets/ai-usagebar.exe`, and **runs the contract
+  check against it**. A CLI that no longer matches `Interop.cs` fails the release
+  instead of shipping a build that cannot read its own backend.
+- The `.csproj` embeds that file *conditionally* (`Exists(...)`), so local builds
+  without it still compile.
+- `CliBinary` extracts it to `%LOCALAPPDATA%\ai-usagebar-win\bin` on first use,
+  re-extracting when the app version changes, and returns that path. **The
+  bundled copy wins over PATH** so every user runs the CLI the release was tested
+  with. With no resource embedded, it falls back to the `ai-usagebar` command.
+- The binary is git-ignored. Never commit it.
+- Redistribution is covered by `THIRD-PARTY-NOTICES.md` (the CLI is MIT).
+
+The upstream version is **not pinned**: each release picks up whatever is current
+on crates.io. That is a deliberate trade, chosen so upstream fixes arrive without
+manual migration. The contract check is what makes it safe, and the release notes
+record which CLI version each build shipped.
 
 ## Tracking the upstream CLI
 
@@ -220,7 +244,7 @@ and the synthetic system entry. **Do not delete this filter.** It was removed
 once by accident and had to be restored.
 
 **Never write an app-only key into the CLI's config.** The CLI parses that file
-with unknown top-level fields denied, so one stray key makes *every* invocation
+with unknown top-level fields denied, so one stray key makes _every_ invocation
 fail with a TOML parse error and the app shows nothing but a System Error. This
 already happened once: `poll_seconds` was written there, so pressing Save in the
 settings window bricked the CLI. Anything the CLI does not declare goes to

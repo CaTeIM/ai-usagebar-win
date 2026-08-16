@@ -25,9 +25,17 @@ management and API communication are handled by the Rust binary.
 
 ## Prerequisites
 
-- [**ai-usagebar**](https://github.com/akitaonrails/ai-usagebar) installed and
-  available in `PATH` (install with `cargo install ai-usagebar`).
-- Provider credentials configured as described in the `ai-usagebar` README.
+- Provider credentials configured as described in the
+  [`ai-usagebar`](https://github.com/akitaonrails/ai-usagebar) README. Running
+  the official `claude` or `codex` CLI once is enough for those providers.
+
+You do **not** need Rust or `cargo install`: released builds bundle the
+`ai-usagebar` binary and extract it on first use. If you already have your own
+copy on `PATH`, the bundled one still takes precedence, so everyone runs the
+version each release was tested against.
+
+Building from source is the exception: a local build does not bundle the CLI and
+expects `ai-usagebar` on `PATH` (`cargo install ai-usagebar`).
 
 ## Screenshots
 

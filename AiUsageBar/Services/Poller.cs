@@ -58,7 +58,7 @@ public sealed class Poller : IDisposable
         {
             var psi = new ProcessStartInfo
             {
-                FileName = "ai-usagebar",
+                FileName = CliBinary.Executable,
                 Arguments = "usage --json",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -83,7 +83,11 @@ public sealed class Poller : IDisposable
             }
             catch (System.ComponentModel.Win32Exception)
             {
-                return ErrorRoot("ai-usagebar binary not found in PATH. Install with 'cargo install ai-usagebar'.");
+                return ErrorRoot(
+                    $"Could not start the ai-usagebar CLI ({CliBinary.Executable}).\n" +
+                    "Released builds ship it bundled, so this usually means the extracted copy " +
+                    "was removed or blocked. Reinstall the app, or install the CLI yourself with " +
+                    "'cargo install ai-usagebar'.");
             }
 
             var outputTask = process.StandardOutput.ReadToEndAsync(linkedCts.Token);

@@ -21,7 +21,7 @@
          restarting at 1 whenever the year or month changes. This is the single
          source of truth: AssemblyVersion and FileVersion are derived from it,
          and the release tag is this value prefixed with "v". -->
-    <Version>2026.8.3</Version>
+    <Version>2026.8.4</Version>
 
     <!-- Distribution is a single self-contained .exe, but those flags
          (SelfContained / PublishSingleFile / RID) are passed ONLY on the publish
@@ -29,6 +29,16 @@
          unconditionally would force a RID on every `dotnet build`/`dotnet test`
          and break them. Plain build/test stays framework-dependent. -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The Rust CLI, bundled so a fresh install needs no `cargo install`.
+         The release workflow builds it into Assets/ before publishing; local
+         builds simply have no such file, and CliBinary falls back to PATH.
+         Never commit this binary: see .gitignore. -->
+    <EmbeddedResource Include="Assets\ai-usagebar.exe"
+                      LogicalName="ai-usagebar.exe"
+                      Condition="Exists('Assets\ai-usagebar.exe')" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Modern Fluent UI for WPF (Mica, dark theme, modern controls). -->

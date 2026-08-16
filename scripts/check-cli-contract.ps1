@@ -67,16 +67,23 @@ Write-Host ""
 # -- usage --json ------------------------------------------------------------
 
 $raw = & ai-usagebar usage --json 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "'ai-usagebar usage --json' exited with $LASTEXITCODE" -ForegroundColor Red
-    exit 1
-}
+$usageExit = $LASTEXITCODE
 
+# Parse first, judge the exit code second. A machine with no credentials at all
+# (a CI runner, for instance) can exit non-zero while still emitting a perfectly
+# well-formed document, and the shape is what this script is here to check. An
+# unparseable payload is the real failure: that is what a rejected config.toml or
+# a changed output mode looks like.
 try {
     $usage = $raw | ConvertFrom-Json
 } catch {
-    Write-Host "'ai-usagebar usage --json' did not return valid JSON: $_" -ForegroundColor Red
+    Write-Host "'ai-usagebar usage --json' did not return valid JSON (exit $usageExit)." -ForegroundColor Red
+    Write-Host $raw
     exit 1
+}
+
+if ($usageExit -ne 0) {
+    $contractNotices.Add("'ai-usagebar usage --json' exited with $usageExit but returned valid JSON (expected when no vendor is configured).")
 }
 
 Compare-Shape $usage $RootFields 'usage root'

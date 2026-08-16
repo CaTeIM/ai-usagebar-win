@@ -46,6 +46,38 @@ jobs:
             throw "Tag ${{ github.ref_name }} does not match .csproj version ${{ steps.version.outputs.tag }}"
           }
 
+      # The app is a wrapper around the Rust CLI, and requiring users to run
+      # `cargo install` first made a fresh download useless. Build the CLI here
+      # and embed it, so the released .exe works on a clean machine.
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Deliberately unpinned: each release picks up the current upstream. The
+      # contract check below is what makes that safe.
+      - name: Build the bundled ai-usagebar CLI
+        id: cli
+        shell: pwsh
+        run: |
+          cargo install ai-usagebar --locked --root "$env:RUNNER_TEMP\cli"
+          $exe = "$env:RUNNER_TEMP\cli\bin\ai-usagebar.exe"
+          if (-not (Test-Path $exe)) { throw "cargo install did not produce $exe" }
+
+          New-Item -ItemType Directory -Force AiUsageBar/Assets | Out-Null
+          Copy-Item $exe AiUsageBar/Assets/ai-usagebar.exe
+
+          $env:Path = "$env:RUNNER_TEMP\cli\bin;$env:Path"
+          $cliVersion = (& ai-usagebar --version) -join ' '
+          "cli_version=$cliVersion" >> $env:GITHUB_OUTPUT
+          Write-Host "Bundling $cliVersion"
+
+      # Upstream ships fast and has broken this app's assumptions before. Verify
+      # the CLI we are about to bundle still matches Interop.cs, and fail the
+      # release rather than shipping a build that cannot read its own backend.
+      - name: Verify the bundled CLI still matches the app's contract
+        shell: pwsh
+        run: |
+          $env:Path = "$env:RUNNER_TEMP\cli\bin;$env:Path"
+          ./scripts/check-cli-contract.ps1
+
       # Single self-contained .exe. The self-contained / single-file / RID flags
       # live here (publish time) only, because putting them in the .csproj would
       # force a RID on every `dotnet build` and break it.
@@ -71,6 +103,13 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           generate_release_notes: true
+          # Which CLI went inside this build. Unpinned upstream means this line is
+          # the only record of what a given release actually shipped.
+          append_body: true
+          body: |
+            Bundled CLI: `${{ steps.cli.outputs.cli_version }}`
+            No `cargo install` required, the executable is self-contained.
           files: |
             ai-usagebar-win-${{ steps.version.outputs.tag }}-x64.exe
             config.example.toml
+            THIRD-PARTY-NOTICES.md

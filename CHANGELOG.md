@@ -3,6 +3,16 @@
 Versions follow CalVer (`YEAR.MONTH.REVISION`). Earlier entries use the
 SemVer scheme this project shipped with before the rewrite.
 
+## 2026.8.4
+
+### Added
+- The app now ships with the `ai-usagebar` CLI inside it. Installing Rust and
+  running `cargo install` is no longer required: download the `.exe` and it
+  works. The bundled copy is extracted on first use and takes precedence over
+  any copy already on `PATH`, so everyone runs the version the release was
+  tested against. Each release records which CLI version it shipped, and the
+  redistribution terms are in `THIRD-PARTY-NOTICES.md`.
+
 ## 2026.8.3
 
 ### Fixed

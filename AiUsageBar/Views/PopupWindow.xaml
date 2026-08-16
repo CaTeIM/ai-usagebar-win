@@ -17,14 +17,24 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Empty state -->
-            <TextBlock
-                x:Name="EmptyLabel"
-                Grid.Row="0"
-                Foreground="{StaticResource MutedBrush}"
-                TextWrapping="Wrap"
-                Visibility="Collapsed"
-                Text="No models configured.&#x0a;Open Settings to add an API key." />
+            <!-- First-run / nothing-configured state. Replaces the vendor cards,
+                 because raw credential errors are not actionable on a fresh
+                 install. The CLI's own text stays below, smaller, for diagnosis. -->
+            <StackPanel x:Name="SetupPanel" Grid.Row="0" Visibility="Collapsed">
+                <TextBlock
+                    x:Name="SetupHintLabel"
+                    Foreground="{StaticResource MutedBrush}"
+                    TextWrapping="Wrap"
+                    LineHeight="18" />
+
+                <TextBlock
+                    x:Name="SetupDetailLabel"
+                    Foreground="{StaticResource MutedBrush}"
+                    Opacity="0.6"
+                    FontSize="10"
+                    TextWrapping="Wrap"
+                    Margin="0,10,0,0" />
+            </StackPanel>
 
             <!-- Vendor cards -->
             <ItemsControl x:Name="VendorsList" Grid.Row="0">

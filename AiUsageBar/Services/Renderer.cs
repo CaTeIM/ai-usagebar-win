@@ -59,11 +59,15 @@ public static class Renderer
             }
         }
 
-        // Unknown sorts below Low, so a healthy vendor would otherwise mask one
-        // whose severity we failed to recognize. With nothing to show, or with
-        // anything unrecognized in the mix, the icon reports "no idea" (grey)
-        // rather than claiming everything is fine.
-        var worstSeverity = severities.Count == 0 || severities.Contains(Severity.Unknown)
+        // Grey means "no idea", and that is the honest reading in three cases:
+        // nothing to show, a severity string we could not parse (which would
+        // otherwise be masked by a healthy sibling, since Unknown sorts below
+        // Low), and nothing readable at all. That last one covers a fresh
+        // install with no credentials and a total network outage alike: neither
+        // is a blown quota, so neither should paint the tray red.
+        var worstSeverity = severities.Count == 0
+            || severities.Contains(Severity.Unknown)
+            || !HasUsableData(root)
             ? Severity.Unknown
             : severities.Max();
 
@@ -92,6 +96,11 @@ public static class Renderer
         || entry.Id == primaryId
         || entry.Id == UsageJsonEntry.SystemId;
 
+    /// <summary>Whether any vendor actually reported usage. False on a machine
+    /// where nothing is signed in, and equally false when every request failed.</summary>
+    private static bool HasUsableData(UsageJsonRoot root)
+        => root.Entries.Any(e => e.Status == "ready");
+
     private static Severity GetWorstSeverity(UsageJsonEntry entry)
     {
         if (entry.Status != "ready") return Severity.Critical;
@@ -109,6 +118,26 @@ public static class Renderer
 
     public static PopupModel PopupModel(UsageJsonRoot root, Config cfg, DateTimeOffset now)
     {
+        // Nothing readable and no synthetic system entry means the CLI ran fine
+        // but has no account to report on, which is what a fresh install looks
+        // like. Raw credential errors are useless to someone who has simply not
+        // signed in yet, so answer the actual question: what do I do now?
+        var systemFailure = root.Entries.Any(e => e.Id == UsageJsonEntry.SystemId);
+        if (!HasUsableData(root) && !systemFailure)
+        {
+            return new PopupModel
+            {
+                NeedsSetup = true,
+                SetupHint =
+                    "No provider is set up yet.\n\n" +
+                    "Sign in once with the Claude or Codex CLI, or add an API key "
+                    + "to the config file through Settings. Usage shows up on the next refresh.",
+                SetupDetail = string.Join("\n", root.Entries
+                    .Where(e => !string.IsNullOrWhiteSpace(e.Error))
+                    .Select(e => $"{e.DisplayName}: {e.Error!.Trim()}")),
+            };
+        }
+
         var model = new PopupModel();
         var primaryId = PrimaryId(root, cfg);
 

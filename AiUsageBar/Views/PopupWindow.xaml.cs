@@ -75,7 +75,22 @@ public partial class PopupWindow : Window
     private void Populate(Config cfg, UsageJsonRoot root)
     {
         var model = Renderer.PopupModel(root, cfg, DateTimeOffset.UtcNow);
-        EmptyLabel.Visibility = model.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
+
+        // The setup panel and the vendor list are alternatives, never both: the
+        // panel only appears when there is nothing worth listing.
+        var showSetup = model.NeedsSetup || model.IsEmpty;
+        SetupPanel.Visibility = showSetup ? Visibility.Visible : Visibility.Collapsed;
+        VendorsList.Visibility = showSetup ? Visibility.Collapsed : Visibility.Visible;
+
+        SetupHintLabel.Text = string.IsNullOrEmpty(model.SetupHint)
+            ? "No usage to show yet."
+            : model.SetupHint;
+
+        SetupDetailLabel.Text = model.SetupDetail;
+        SetupDetailLabel.Visibility = string.IsNullOrWhiteSpace(model.SetupDetail)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+
         VendorsList.ItemsSource = model.Vendors;
     }
 

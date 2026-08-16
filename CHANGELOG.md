@@ -3,6 +3,17 @@
 Versions follow CalVer (`YEAR.MONTH.REVISION`). Earlier entries use the
 SemVer scheme this project shipped with before the rewrite.
 
+## 2026.8.5
+
+### Changed
+- First run on a machine with nothing signed in now explains what to do instead
+  of showing raw credential errors: the popup asks you to sign in once with the
+  Claude or Codex CLI, or to add an API key, and keeps the technical detail
+  underneath in smaller text.
+- The tray icon is grey, not red, when no provider returns data at all. Red is
+  reserved for a quota that is actually in trouble, so a fresh install and a
+  network outage no longer look like an emergency.
+
 ## 2026.8.4
 
 ### Added

@@ -11,6 +11,19 @@ namespace AiUsageBar.Models;
 public sealed class PopupModel
 {
     public List<VendorCard> Vendors { get; init; } = new();
+
+    /// <summary>True when no vendor returned usable data, which on a fresh
+    /// install means nothing is signed in yet. Showing the raw CLI errors then
+    /// tells a new user nothing actionable, so the popup shows
+    /// <see cref="SetupHint"/> instead, with <see cref="SetupDetail"/> kept
+    /// available underneath for diagnosis.</summary>
+    public bool NeedsSetup { get; init; }
+
+    public string SetupHint { get; init; } = "";
+
+    /// <summary>Raw per-vendor errors behind the hint.</summary>
+    public string SetupDetail { get; init; } = "";
+
     public bool IsEmpty => Vendors.Count == 0;
 }
 

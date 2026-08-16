@@ -28,7 +28,7 @@ public sealed class TrayService : IDisposable
 
     public void Init()
     {
-        _icon.ToolTipText = "ai-usagebar — loading…";
+        _icon.ToolTipText = "ai-usagebar - loading…";
         _icon.Icon = TrayIconFactory.For(Severity.Low);
         var toggle = new RelayCommand(() => Clicked?.Invoke());
         _icon.LeftClickCommand = toggle;

@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="AI Usage — Settings"
+    Title="AI Usage - Settings"
     Width="480"
     Height="400"
     ExtendsContentIntoTitleBar="True"
@@ -18,7 +18,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="AI Usage — Settings" />
+        <ui:TitleBar Grid.Row="0" Title="AI Usage - Settings" />
 
         <ScrollViewer Grid.Row="1" Padding="18" VerticalScrollBarVisibility="Auto">
             <StackPanel>

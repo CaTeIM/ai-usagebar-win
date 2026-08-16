@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- Architecture rewrite: The app is now a C# WPF wrapper around the native Rust `ai-usagebar` binary.
+- Delegated all network requests, API key management, and OAuth to the Rust CLI.
+
 ## 0.3.0
 
 UI-stack rewrite plus new convenience features. Ships as a single

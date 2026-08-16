@@ -81,10 +81,9 @@ public partial class SettingsWindow : FluentWindow
             cfg.Ui.Primary = _root.Entries[idx].Id;
         }
 
-        var sane = cfg.Sanitized();
         try
         {
-            sane.Save();
+            cfg.Save();
         }
         catch { }
 

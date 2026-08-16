@@ -63,7 +63,7 @@ public static class Renderer
         }
 
         var tooltip = tipLines.Count == 0
-            ? "ai-usagebar — no models configured"
+            ? "ai-usagebar - no models configured"
             : string.Join("\n", tipLines);
 
         return new Rendered(worstSeverity, tooltip);
@@ -169,7 +169,6 @@ public static class Renderer
         {
             PollSeconds = Math.Max(cfg.PollSeconds ?? 60, 15),
             Primary = cfg.PrimaryStr(),
-            RefreshTokens = cfg.RefreshEnabled(),
         };
 
         foreach (var entry in root.Entries)
@@ -182,19 +181,12 @@ public static class Renderer
 
     private static VendorSetting VendorSetting(UsageJsonEntry entry, Config cfg)
     {
-        var status = entry.Status == "ready" ? "Connected" : $"Error — {entry.Error ?? entry.Status}";
+        var status = entry.Status == "ready" ? "Connected" : $"Error - {entry.Error ?? entry.Status}";
 
         return new VendorSetting
         {
             Id = entry.Id,
             Name = entry.DisplayName,
-            Enabled = cfg.IsEnabledId(entry.Id),
-            Configured = cfg.IsConfiguredId(entry.Id),
-            Kind = "apikey", // Simplified, as we only need UI to know if we can edit
-            ApiKeyEnv = null,
-            ApiKey = null,
-            PlanTier = null,
-            Hint = "Edit via ai-usagebar config.toml",
             Status = status,
         };
     }

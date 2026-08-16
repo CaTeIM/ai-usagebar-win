@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using Tomlyn;
-using System.Collections.Generic;
+using Tomlyn.Model;
 
 namespace AiUsageBar.Services;
 
@@ -12,16 +12,7 @@ namespace AiUsageBar.Services;
 public sealed class Config
 {
     public long? PollSeconds { get; set; }
-    public bool? RefreshTokens { get; set; }
     public UiConfig Ui { get; set; } = new();
-
-    // Store unknown sections dynamically to preserve them when saving
-    public Dictionary<string, object> DynamicTable { get; set; } = new();
-
-    private static readonly TomlModelOptions TomlOptions = new()
-    {
-        IgnoreMissingProperties = true,
-    };
 
     public static Config Load()
     {
@@ -30,7 +21,8 @@ public sealed class Config
         try
         {
             var text = File.ReadAllText(path);
-            return Toml.ToModel<Config>(text, options: TomlOptions);
+            var options = new TomlModelOptions { IgnoreMissingProperties = true };
+            return Toml.ToModel<Config>(text, options: options);
         }
         catch
         {
@@ -40,34 +32,53 @@ public sealed class Config
 
     public TimeSpan PollInterval() => TimeSpan.FromSeconds(Math.Max(PollSeconds ?? 60, 15));
 
-    public bool RefreshEnabled() => RefreshTokens == true;
-
-    public Config Sanitized()
-    {
-        if (PollSeconds is { } p) PollSeconds = Math.Max(p, 15);
-        return this;
-    }
-
     public void Save()
     {
         var path = DefaultPath() ?? throw new InvalidOperationException("could not resolve config directory");
         var dir = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-        File.WriteAllText(path, Toml.FromModel(this, TomlOptions));
+
+        TomlTable table;
+        if (File.Exists(path))
+        {
+            try
+            {
+                var text = File.ReadAllText(path);
+                table = Toml.ToModel(text);
+            }
+            catch
+            {
+                table = new TomlTable();
+            }
+        }
+        else
+        {
+            table = new TomlTable();
+        }
+
+        // Update only the properties we manage
+        table["poll_seconds"] = Math.Max(PollSeconds ?? 60, 15);
+
+        if (!string.IsNullOrEmpty(Ui.Primary))
+        {
+            if (!table.TryGetValue("ui", out var uiObj) || uiObj is not TomlTable uiTable)
+            {
+                uiTable = new TomlTable();
+                table["ui"] = uiTable;
+            }
+            uiTable["primary"] = Ui.Primary;
+        }
+
+        File.WriteAllText(path, Toml.FromModel(table));
     }
 
     public static string? DefaultPath()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        // We continue to read from the Rust CLI config file so settings are shared.
         return string.IsNullOrEmpty(appData) ? null : Path.Combine(appData, "ai-usagebar", "config", "config.toml");
     }
 
     public string PrimaryStr() => string.IsNullOrEmpty(Ui.Primary) ? "anthropic" : Ui.Primary;
-
-    // Helper stubs since we no longer track individual vendors in C#
-    public bool IsEnabledId(string id) => true;
-    public bool IsConfiguredId(string id) => true; // Always true, we let Rust CLI handle configuration errors
 }
 
 public sealed class UiConfig

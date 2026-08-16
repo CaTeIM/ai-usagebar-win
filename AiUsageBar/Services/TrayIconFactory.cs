@@ -23,8 +23,13 @@ public static class TrayIconFactory
         _ => (0x9e, 0x9e, 0x9e),
     };
 
-    /// <summary>A 32x32 rounded-square icon tinted by severity. Icons are cached
-    /// for the process lifetime (only four ever exist).</summary>
+    /// <summary>Relative heights of the three bars, as a fraction of the tallest.
+    /// Mirrors scripts/generate-icon.py so the tray and the .exe icon match.</summary>
+    private static readonly float[] BarHeights = { 0.47f, 0.73f, 1.00f };
+
+    /// <summary>A 32x32 three-bar icon tinted by severity. A plain square read as
+    /// a missing-icon placeholder; the rising bars say "usage meter" even at 16px.
+    /// Icons are cached for the process lifetime (only five ever exist).</summary>
     public static Icon For(Severity severity)
     {
         if (Cache.TryGetValue(severity, out var cached)) return cached;
@@ -36,24 +41,32 @@ public static class TrayIconFactory
             gfx.SmoothingMode = SmoothingMode.AntiAlias;
             gfx.Clear(Color.Transparent);
 
-            using var path = RoundedRect(0, 0, Size, Size, 6);
-            // 2px darker border for definition against any taskbar color.
-            using var borderBrush = new SolidBrush(Color.FromArgb(255, r / 2, g / 2, b / 2));
-            gfx.FillPath(borderBrush, path);
+            using var fill = new SolidBrush(Color.FromArgb(255, r, g, b));
 
-            using var innerPath = RoundedRect(2, 2, Size - 4, Size - 4, 4);
-            using var fillBrush = new SolidBrush(Color.FromArgb(255, r, g, b));
-            gfx.FillPath(fillBrush, innerPath);
+            const float barWidth = Size * 0.16f;
+            const float gap = Size * 0.08f;
+            const float baseline = Size * 0.80f;
+            const float tallest = Size * 0.60f;
+            const float radius = barWidth * 0.28f;
+
+            var x = (Size - (barWidth * 3 + gap * 2)) / 2f;
+            foreach (var height in BarHeights)
+            {
+                var top = baseline - tallest * height;
+                using var path = RoundedRect(x, top, barWidth, baseline - top, radius);
+                gfx.FillPath(fill, path);
+                x += barWidth + gap;
+            }
         }
 
         // GetHicon's handle is intentionally leaked: the icon lives for the
-        // whole process and there are only four of them.
+        // whole process and there is one per severity.
         var icon = Icon.FromHandle(bmp.GetHicon());
         Cache[severity] = icon;
         return icon;
     }
 
-    private static GraphicsPath RoundedRect(int x, int y, int w, int h, int radius)
+    private static GraphicsPath RoundedRect(float x, float y, float w, float h, float radius)
     {
         var d = radius * 2;
         var path = new GraphicsPath();

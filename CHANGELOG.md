@@ -3,6 +3,25 @@
 Versions follow CalVer (`YEAR.MONTH.REVISION`). Earlier entries use the
 SemVer scheme this project shipped with before the rewrite.
 
+## 2026.8.2
+
+### Fixed
+- The popup no longer refuses to reopen. Closing it left an internal flag set, so
+  every later tray click hid an already hidden window and the only way out was
+  Task Manager.
+- Output from the CLI is now decoded as UTF-8. Separators and accented text came
+  through mangled (`Â·` instead of `·`) because the pipe was being read with the
+  console code page.
+- Usage bars no longer overlap their own text. The CLI's detail text grew into a
+  full sentence and collided with the metric label; it now sits on its own line
+  under each bar.
+
+### Added
+- The executable finally has an icon, three rising bars, instead of the generic
+  Windows placeholder in Explorer, the taskbar and the installer.
+- The tray icon uses that same three-bar shape rather than a plain square, while
+  still being tinted by severity.
+
 ## 2026.8.1
 
 ### Changed
@@ -19,9 +38,17 @@ SemVer scheme this project shipped with before the rewrite.
 - `Severity.Unknown` (grey icon) for the uninitialized state, distinguishing
   "not loaded yet" from "healthy".
 
+- A script that checks the installed CLI against the JSON contract the app
+  expects, so upstream schema changes are caught instead of failing silently.
+
 ### Fixed
 - Restored the build: the renderer still called `Config.IsConfiguredId`, removed
   during the legacy cleanup.
+- Vendors you never configured are no longer listed. The CLI reports every
+  candidate vendor, and the unconfigured ones came back as errors, which kept the
+  tray icon permanently red.
+- An unrecognized severity from the CLI now shows grey instead of green, so a
+  future upstream rename cannot make a maxed-out quota look healthy.
 
 ### Removed
 - Obsolete OAuth and API key logic from config and view models.

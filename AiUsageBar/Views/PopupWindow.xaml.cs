@@ -59,6 +59,10 @@ public partial class PopupWindow : Window
     {
         if (!_visible) return;
         Hide();
+        // Clearing this is what lets Toggle open the popup again. Leaving it set
+        // made every later click take the "already visible, so hide" branch,
+        // hiding an already hidden window forever.
+        _visible = false;
         _hiddenAt = DateTimeOffset.UtcNow;
     }
 

@@ -66,6 +66,14 @@
                                                     Height="8"
                                                     Background="{StaticResource TrackBrush}"
                                                     Foreground="{Binding Level, Converter={StaticResource LevelToBrush}}" />
+
+                                                <TextBlock
+                                                    Text="{Binding Reset}"
+                                                    Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}"
+                                                    Foreground="{StaticResource MutedBrush}"
+                                                    FontSize="11"
+                                                    TextWrapping="Wrap"
+                                                    Margin="0,3,0,0" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

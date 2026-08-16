@@ -17,15 +17,15 @@ above.
 
 ## Tech stack
 
-| Piece | Version / notes |
-|---|---|
-| .NET | 8 (`net8.0-windows10.0.19041.0`) |
-| UI | WPF, styled with WPF-UI 4.3.0 (Fluent, Mica, dark theme) |
-| Tray icon | H.NotifyIcon.Wpf 2.2.0 |
-| Icon drawing | System.Drawing.Common 9.0.0 |
-| Config format | TOML via Tomlyn 0.17.0 |
-| Platforms | `x64` and `arm64` (there is no `AnyCPU`) |
-| Versioning | CalVer, see below |
+| Piece         | Version / notes                                          |
+| ------------- | -------------------------------------------------------- |
+| .NET          | 8 (`net8.0-windows10.0.19041.0`)                         |
+| UI            | WPF, styled with WPF-UI 4.3.0 (Fluent, Mica, dark theme) |
+| Tray icon     | H.NotifyIcon.Wpf 2.2.0                                   |
+| Icon drawing  | System.Drawing.Common 9.0.0                              |
+| Config format | TOML via Tomlyn 0.17.0                                   |
+| Platforms     | `x64` and `arm64` (there is no `AnyCPU`)                 |
+| Versioning    | CalVer, see below                                        |
 
 ## Architecture
 
@@ -154,13 +154,48 @@ at 1 whenever the year or month changes.
 `AssemblyVersion` and `FileVersion` derive from it, and `release.yml` reads it
 to name the artifact and tag the release.
 
-Two ways to release, both from `master`:
+### Release procedure
 
-1. Push a matching tag: `git tag v2026.8.1 && git push origin v2026.8.1`.
-2. Run the `release` workflow manually from the Actions tab.
+**A version bump is not done until the tag is pushed.** Bumping `<Version>` on
+its own produces nothing anyone can download: the artifact exists only after the
+tag triggers the workflow. Treat the four steps below as one unit.
+
+1. Bump `<Version>` in `AiUsageBar/AiUsageBar.csproj` to the next CalVer value.
+2. Add the matching section at the top of `CHANGELOG.md`.
+3. Commit both.
+4. Tag and push, which triggers the `release` workflow:
+
+   ```powershell
+   git tag v<version>
+   git push origin v<version>
+   ```
+
+Both lines in step 4 are required. `git tag` only creates the tag locally, and
+`git push origin v<version>` is what publishes it. Pushing a tag that was never
+created fails with `src refspec ... does not match any`.
+
+**Standing order for agents:** whenever you bump the version, deliver the exact
+`git tag` and `git push` commands in the same message as the bump, and state
+plainly that the release is incomplete until they run. Never leave a bump in the
+working tree without them, and never assume the tag step happened.
+
+Alternative: run the `release` workflow manually from the Actions tab. It reads
+`<Version>` and creates the tag itself. Use it only when no tag exists yet for
+that version, since re-running it for an existing tag updates the current
+release instead of creating a new one.
 
 `release.yml` fails the run when a pushed tag disagrees with `<Version>`, so
-bump the `.csproj` first and tag second.
+never tag before the bump is committed.
+
+To replace an already published version (same number, new binary), delete the
+release and tag first, then recreate:
+
+```powershell
+gh release delete v<version> --yes --cleanup-tag
+git tag -d v<version>            # only if it still exists locally
+git tag v<version>
+git push origin v<version>
+```
 
 ## Conventions
 
@@ -169,7 +204,7 @@ bump the `.csproj` first and tag second.
   past-tense verbs.
 - **No em dashes or en dashes anywhere**, including code comments and docs. Use
   a comma, colon, parentheses, or a new sentence.
-- Comments explain *why*, not *what*. The existing comments carry the reasoning
+- Comments explain _why_, not _what_. The existing comments carry the reasoning
   behind non-obvious decisions; preserve that when editing around them.
 - Nullable reference types and implicit usings are enabled.
 

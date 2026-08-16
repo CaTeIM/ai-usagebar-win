@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,6 +62,11 @@ public sealed class Poller : IDisposable
                 Arguments = "usage --json",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                // The CLI emits UTF-8. Without this, .NET decodes the pipe using
+                // the console code page (CP1252 here), so a middle dot arrives as
+                // "Â·" and any accented text is mangled.
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 Environment = { ["NO_COLOR"] = "1" }

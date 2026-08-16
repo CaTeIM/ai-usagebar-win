@@ -37,7 +37,14 @@ public sealed class Bar
     /// <summary>"low" | "mid" | "high" | "critical"</summary>
     public string Level { get; init; } = "low";
 
-    public string ValueText => string.IsNullOrEmpty(Reset) ? $"{Pct}%" : $"{Pct}%  ·  {Reset}";
+    /// <summary>Right-hand side of the bar header. Kept to the percentage alone:
+    /// the CLI's detail text grew into a full sentence ("Resets in 2h 16m, 54%
+    /// elapsed, 32pts under"), and appending it here overlapped the label, which
+    /// shares the same grid cell.</summary>
+    public string ValueText => $"{Pct}%";
+
+    /// <summary>Detail line rendered under the bar, when the CLI supplies one.</summary>
+    public bool HasDetail => !string.IsNullOrWhiteSpace(Reset);
 }
 
 public sealed class Fact

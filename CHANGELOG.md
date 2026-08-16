@@ -1,10 +1,31 @@
 # Changelog
 
-## [Unreleased]
+Versions follow CalVer (`YEAR.MONTH.REVISION`). Earlier entries use the
+SemVer scheme this project shipped with before the rewrite.
+
+## 2026.8.1
 
 ### Changed
 - Architecture rewrite: The app is now a C# WPF wrapper around the native Rust `ai-usagebar` binary.
 - Delegated all network requests, API key management, and OAuth to the Rust CLI.
+- Config handling now preserves unknown keys on save, so CLI-owned settings survive a round trip.
+- Replaced em-dashes with hyphens across user-facing strings.
+- Migrated versioning from SemVer to CalVer.
+
+### Added
+- 10-second timeout on the CLI process, preventing an indefinite hang.
+- Captured `stderr` and surfaced it as a synthetic error entry, so a missing or
+  failing binary is reported in the UI instead of failing silently.
+- `Severity.Unknown` (grey icon) for the uninitialized state, distinguishing
+  "not loaded yet" from "healthy".
+
+### Fixed
+- Restored the build: the renderer still called `Config.IsConfiguredId`, removed
+  during the legacy cleanup.
+
+### Removed
+- Obsolete OAuth and API key logic from config and view models.
+- The empty `AiUsageBar.Tests` project, which never contained a test.
 
 ## 0.3.0
 

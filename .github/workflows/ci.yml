@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build-test:
+  build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +20,3 @@ jobs:
 
       - name: Build
         run: dotnet build AiUsageBar.sln -c Release -p:Platform=x64 --no-restore
-
-      - name: Test
-        run: dotnet test AiUsageBar.Tests/AiUsageBar.Tests.csproj -c Release -p:Platform=x64 --no-build

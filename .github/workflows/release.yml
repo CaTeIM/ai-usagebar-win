@@ -1,11 +1,14 @@
 name: release
 
 # Builds the self-contained, single-file WPF app and publishes the .exe to a
-# GitHub Release whenever you push a version tag, e.g.
-#   git tag v0.3.0 && git push origin v0.3.0
+# GitHub Release. Two ways to trigger it, both from master:
+#   1. Push a CalVer tag:  git tag v2026.8.1 && git push origin v2026.8.1
+#   2. Run it manually from the Actions tab (workflow_dispatch), picking master.
+#      The tag is then created from the version declared in the .csproj.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,9 +23,32 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      # The .csproj <Version> is the single source of truth for CalVer. Reading
+      # it here keeps the artifact name and the release tag correct whether the
+      # run came from a tag push or a manual dispatch on master.
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $xml = [xml](Get-Content AiUsageBar/AiUsageBar.csproj)
+          $version = @($xml.Project.PropertyGroup.Version | Where-Object { $_ })[0]
+          if (-not $version) { throw "No <Version> found in AiUsageBar.csproj" }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=v$version" >> $env:GITHUB_OUTPUT
+
+      # A tag that disagrees with the .csproj would ship an .exe whose internal
+      # version does not match its release. Fail loudly instead.
+      - name: Verify tag matches .csproj version
+        if: github.event_name == 'push'
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_name }}" -ne "${{ steps.version.outputs.tag }}") {
+            throw "Tag ${{ github.ref_name }} does not match .csproj version ${{ steps.version.outputs.tag }}"
+          }
+
       # Single self-contained .exe. The self-contained / single-file / RID flags
-      # live here (publish time) only — putting them in the .csproj would force a
-      # RID on every `dotnet build`/`test` and break them.
+      # live here (publish time) only, because putting them in the .csproj would
+      # force a RID on every `dotnet build` and break it.
       - name: Publish (win-x64, self-contained, single-file)
         run: >
           dotnet publish AiUsageBar/AiUsageBar.csproj
@@ -38,12 +64,13 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item publish/ai-usagebar-win.exe `
-            "ai-usagebar-win-${{ github.ref_name }}-x64.exe"
+            "ai-usagebar-win-${{ steps.version.outputs.tag }}-x64.exe"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
           generate_release_notes: true
           files: |
-            ai-usagebar-win-${{ github.ref_name }}-x64.exe
+            ai-usagebar-win-${{ steps.version.outputs.tag }}-x64.exe
             config.example.toml

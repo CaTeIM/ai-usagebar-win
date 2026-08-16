@@ -14,10 +14,12 @@ public static class Renderer
         var worstSeverity = Severity.Unknown;
         var tipLines = new List<string>();
 
-        // Every entry the CLI reports is shown, including the synthetic error
-        // entry injected when the binary is missing or fails.
+        var primaryId = PrimaryId(root, cfg);
+
         foreach (var entry in Ordered(root.Entries, root.Primary))
         {
+            if (!ShouldShow(entry, primaryId)) continue;
+
             // Compute worst severity
             var entrySeverity = GetWorstSeverity(entry);
             if (entrySeverity > worstSeverity || worstSeverity == Severity.Unknown)
@@ -72,6 +74,21 @@ public static class Renderer
     private static IEnumerable<UsageJsonEntry> Ordered(List<UsageJsonEntry> entries, string? primaryId)
         => entries.OrderBy(r => r.Id != primaryId).ThenBy(r => r.Id);
 
+    /// <summary>The vendor the UI revolves around: what the CLI reported, or the
+    /// local config when the CLI could not say (a synthetic error root).</summary>
+    private static string PrimaryId(UsageJsonRoot root, Config cfg)
+        => string.IsNullOrEmpty(root.Primary) ? cfg.PrimaryStr() : root.Primary;
+
+    // The CLI reports every candidate vendor, configured or not, so the ones the
+    // user never set up come back as errors. Rendering those would keep the tray
+    // icon permanently red, so only three kinds of entry earn a slot: one with
+    // actual data, the primary vendor (an outage there must surface), and the
+    // synthetic entry standing in for a CLI failure.
+    private static bool ShouldShow(UsageJsonEntry entry, string primaryId)
+        => entry.Status == "ready"
+        || entry.Id == primaryId
+        || entry.Id == UsageJsonEntry.SystemId;
+
     private static Severity GetWorstSeverity(UsageJsonEntry entry)
     {
         if (entry.Status != "ready") return Severity.Critical;
@@ -85,8 +102,12 @@ public static class Renderer
     public static PopupModel PopupModel(UsageJsonRoot root, Config cfg, DateTimeOffset now)
     {
         var model = new PopupModel();
+        var primaryId = PrimaryId(root, cfg);
+
         foreach (var entry in Ordered(root.Entries, root.Primary))
         {
+            if (!ShouldShow(entry, primaryId)) continue;
+
             if (entry.Status == "ready")
             {
                 model.Vendors.Add(OkCard(entry));

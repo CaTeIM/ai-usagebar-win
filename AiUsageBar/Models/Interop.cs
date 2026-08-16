@@ -15,6 +15,9 @@ public sealed class UsageJsonRoot
 
 public sealed class UsageJsonEntry
 {
+    /// <summary>Id of the synthetic entry injected when the CLI itself fails.</summary>
+    public const string SystemId = "system";
+
     [JsonPropertyName("display_name")]
     public string DisplayName { get; set; } = "";
 

@@ -126,7 +126,7 @@ public sealed class Poller : IDisposable
             {
                 new()
                 {
-                    Id = "system",
+                    Id = UsageJsonEntry.SystemId,
                     DisplayName = "System Error",
                     Status = "error",
                     Error = message

@@ -1,9 +1,12 @@
-# ai-usagebar configuration.
+# ai-usagebar configuration (owned by the Rust CLI).
 # Copy to:  %APPDATA%\ai-usagebar\config\config.toml
-
-# Seconds between refreshes (minimum 15). Default 60.
-poll_seconds = 60
+#
+# Do NOT add keys the CLI does not know: it rejects unknown top-level fields and
+# fails to parse the whole file, which leaves the tray app showing a System
+# Error. In particular `poll_seconds` does NOT belong here. The Windows app
+# keeps its refresh interval in its own file:
+#   %APPDATA%\ai-usagebar-win\settings.toml
 
 [ui]
 # Which vendor leads the tray tooltip. Defaults to "anthropic".
-# primary = "anthropic"   # anthropic | openai | zai | openrouter | deepseek
+# primary = "anthropic"   # anthropic | openai | zai | openrouter

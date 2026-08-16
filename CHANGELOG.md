@@ -3,6 +3,20 @@
 Versions follow CalVer (`YEAR.MONTH.REVISION`). Earlier entries use the
 SemVer scheme this project shipped with before the rewrite.
 
+## 2026.8.3
+
+### Fixed
+- Saving in the settings window no longer breaks the app. The refresh interval
+  was written into the CLI's `config.toml` as `poll_seconds`, a key the CLI does
+  not accept, and it then refused to parse the file at all, so every reading
+  turned into "System Error". The interval now lives in
+  `%APPDATA%\ai-usagebar-win\settings.toml`, and saving also removes the stray
+  key from the CLI's file, repairing configs broken by earlier versions.
+
+### Changed
+- Settings are now split by owner: the refresh interval belongs to this app, and
+  only `[ui] primary` is written into the CLI's config.
+
 ## 2026.8.2
 
 ### Fixed

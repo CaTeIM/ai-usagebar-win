@@ -53,11 +53,16 @@ red >=90%.
 
 ## Config
 
-Optional. The Windows app manages only two settings in
-`%APPDATA%\ai-usagebar\config\config.toml`:
+Optional, and split across two files:
 
-- `poll_seconds` - refresh interval, default 60, minimum 15.
-- `[ui] primary` - provider shown first in the tooltip/popup.
+- `%APPDATA%\ai-usagebar-win\settings.toml` holds `poll_seconds`, the refresh
+  interval (default 60, minimum 15). This file belongs to the Windows app.
+- `%APPDATA%\ai-usagebar\config\config.toml` holds `[ui] primary`, the provider
+  shown first in the tooltip and popup. This file belongs to the Rust CLI.
+
+Keep `poll_seconds` out of the CLI's file. The CLI rejects unknown top-level
+keys and refuses to parse the whole file, which leaves the app showing only a
+System Error.
 
 All other settings (providers, API keys, credentials) are managed by the
 `ai-usagebar` Rust CLI. Use `Settings > Open config.toml` or edit the file

@@ -102,16 +102,16 @@ the app under test is a WPF assembly, so the test project needs `UseWPF`.
 
 ## Configuration
 
-Read from `%APPDATA%\ai-usagebar\config\config.toml`. Missing file or parse
-error falls back to defaults, never an exception.
+Two files, on purpose. A missing file or parse error falls back to defaults,
+never an exception.
 
-The app owns only two settings:
+| Setting | File | Owner |
+|---|---|---|
+| `poll_seconds` (refresh interval, default 60, floor 15) | `%APPDATA%\ai-usagebar-win\settings.toml` | this app |
+| `[ui] primary` (vendor leading the tooltip and popup) | `%APPDATA%\ai-usagebar\config\config.toml` | the Rust CLI |
 
-- `poll_seconds`: refresh interval, default 60, floor of 15.
-- `[ui] primary`: which vendor leads the tooltip and popup.
-
-Everything else in that file (providers, API keys, credentials) belongs to the
-Rust CLI. See `config.example.toml`.
+Everything else in the CLI's file (providers, API keys, credentials) belongs to
+the CLI. See `config.example.toml`.
 
 ## Tracking the upstream CLI
 
@@ -218,6 +218,14 @@ red permanently. `Renderer.ShouldShow` exists exactly to prevent that: it keeps
 entries that are `ready`, the primary vendor (so a real outage still surfaces),
 and the synthetic system entry. **Do not delete this filter.** It was removed
 once by accident and had to be restored.
+
+**Never write an app-only key into the CLI's config.** The CLI parses that file
+with unknown top-level fields denied, so one stray key makes *every* invocation
+fail with a TOML parse error and the app shows nothing but a System Error. This
+already happened once: `poll_seconds` was written there, so pressing Save in the
+settings window bricked the CLI. Anything the CLI does not declare goes to
+`Config.AppConfigPath()` instead. `Config.Save()` also removes the legacy
+`poll_seconds` from the CLI file, repairing configs broken by older builds.
 
 **An unrecognized severity must never read as healthy.** `SeverityRules.Parse`
 maps an unknown string to `Severity.Unknown` (grey), not `Severity.Low` (green),

@@ -11,7 +11,7 @@ public static class Renderer
 
     public static Rendered Render(UsageJsonRoot root, Config cfg, DateTimeOffset now)
     {
-        var worstSeverity = Severity.Unknown;
+        var severities = new List<Severity>();
         var tipLines = new List<string>();
 
         var primaryId = PrimaryId(root, cfg);
@@ -20,12 +20,7 @@ public static class Renderer
         {
             if (!ShouldShow(entry, primaryId)) continue;
 
-            // Compute worst severity
-            var entrySeverity = GetWorstSeverity(entry);
-            if (entrySeverity > worstSeverity || worstSeverity == Severity.Unknown)
-            {
-                worstSeverity = entrySeverity;
-            }
+            severities.Add(GetWorstSeverity(entry));
 
             // Build tooltip line
             var tag = entry.Id.Substring(0, Math.Min(3, entry.Id.Length));
@@ -64,6 +59,14 @@ public static class Renderer
             }
         }
 
+        // Unknown sorts below Low, so a healthy vendor would otherwise mask one
+        // whose severity we failed to recognize. With nothing to show, or with
+        // anything unrecognized in the mix, the icon reports "no idea" (grey)
+        // rather than claiming everything is fine.
+        var worstSeverity = severities.Count == 0 || severities.Contains(Severity.Unknown)
+            ? Severity.Unknown
+            : severities.Max();
+
         var tooltip = tipLines.Count == 0
             ? "ai-usagebar - no models configured"
             : string.Join("\n", tipLines);
@@ -93,7 +96,12 @@ public static class Renderer
     {
         if (entry.Status != "ready") return Severity.Critical;
         if (entry.Metrics == null || entry.Metrics.Count == 0) return Severity.Low;
-        var severities = entry.Metrics.Select(m => SeverityRules.Parse(m.Severity ?? "low")).ToList();
+
+        var severities = entry.Metrics.Select(m => SeverityRules.Parse(m.Severity ?? "")).ToList();
+
+        // A single unreadable metric is enough to distrust the whole entry.
+        if (severities.Contains(Severity.Unknown)) return Severity.Unknown;
+
         return severities.Max();
     }
 
@@ -209,12 +217,17 @@ public enum Severity { Unknown, Low, Mid, High, Critical }
 
 public static class SeverityRules
 {
+    /// <summary>Maps a severity string reported by the CLI. An unrecognized value
+    /// yields <see cref="Severity.Unknown"/>, never <see cref="Severity.Low"/>:
+    /// if the CLI ever renames or adds a level, the UI must not silently claim
+    /// that a maxed-out quota is healthy.</summary>
     public static Severity Parse(string level) => level switch
     {
         "critical" => Severity.Critical,
         "high" => Severity.High,
         "mid" => Severity.Mid,
-        _ => Severity.Low,
+        "low" => Severity.Low,
+        _ => Severity.Unknown,
     };
 
     public static Severity ForPct(int pct) => pct switch

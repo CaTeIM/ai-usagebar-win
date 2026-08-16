@@ -69,6 +69,8 @@ AiUsageBar/
 .github/workflows/
   ci.yml                   restore + build on push to master and on PRs
   release.yml              publish single-file .exe to a GitHub Release
+scripts/
+  check-cli-contract.ps1   verifies the installed CLI still matches Interop.cs
 ```
 
 ## Build and run
@@ -111,6 +113,38 @@ The app owns only two settings:
 Everything else in that file (providers, API keys, credentials) belongs to the
 Rust CLI. See `config.example.toml`.
 
+## Tracking the upstream CLI
+
+Validated against **`ai-usagebar` 1.0.3**. The upstream moves fast (ten releases
+in the three weeks before that version, including a `0.22.0` to `1.0.0` jump),
+so treat schema drift as expected rather than exceptional.
+
+Update the CLI and re-check the contract:
+
+```powershell
+cargo install ai-usagebar --force
+ai-usagebar --version
+pwsh ./scripts/check-cli-contract.ps1
+```
+
+The check compares the live JSON against the fields in `Interop.cs`, the
+severity strings in `SeverityRules.Parse`, and the section types `Renderer.cs`
+handles. It exits non-zero when something the app depends on is gone.
+
+Failure modes ranked by how they show up:
+
+- **Loud and safe**: the command or its flags change. `Poller` catches it and
+  renders a "System Error" card. Nothing to design around.
+- **Silent**: a field is renamed. `System.Text.Json` ignores unknown fields and
+  defaults missing ones, so the vendor renders as `ready` with no bars. This is
+  what the contract script exists to catch.
+- **Cosmetic**: a new vendor id appears. The tooltip tag falls back to the first
+  three letters of the id. `Renderer.cs` has short tags for 7 of the 16 vendors
+  the CLI supports; extending that list is optional polish.
+
+`usage --json` carries no `schema_version` (only `settings show` does), so there
+is no version field to branch on. The script is the substitute.
+
 ## Versioning and release
 
 CalVer `YEAR.MONTH.REVISION`, month without a leading zero, revision restarting
@@ -149,6 +183,14 @@ red permanently. `Renderer.ShouldShow` exists exactly to prevent that: it keeps
 entries that are `ready`, the primary vendor (so a real outage still surfaces),
 and the synthetic system entry. **Do not delete this filter.** It was removed
 once by accident and had to be restored.
+
+**An unrecognized severity must never read as healthy.** `SeverityRules.Parse`
+maps an unknown string to `Severity.Unknown` (grey), not `Severity.Low` (green),
+and both `GetWorstSeverity` and `Render` propagate a single `Unknown` instead of
+letting a healthy sibling metric mask it. The reason: `Unknown` sorts below
+`Low` in the enum, so a naive `Max()` would hide it. If the CLI renames a
+severity level, the tray must say "no idea", never "all good" over a maxed-out
+quota.
 
 **Publish flags live in the workflow, not the `.csproj`.** `SelfContained`,
 `PublishSingleFile` and the RID are passed only on the `dotnet publish` command

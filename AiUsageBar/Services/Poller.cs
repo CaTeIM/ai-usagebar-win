@@ -63,23 +63,76 @@ public sealed class Poller : IDisposable
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Environment = { ["NO_COLOR"] = "1" } // Ensure clean JSON
+                Environment = { ["NO_COLOR"] = "1" }
             };
 
-            using var process = Process.Start(psi);
-            if (process == null) return null;
+            using var process = new Process { StartInfo = psi };
 
-            var output = await process.StandardOutput.ReadToEndAsync(ct).ConfigureAwait(false);
-            await process.WaitForExitAsync(ct).ConfigureAwait(false);
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
 
-            if (string.IsNullOrWhiteSpace(output)) return null;
+            try
+            {
+                process.Start();
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                return ErrorRoot("ai-usagebar binary not found in PATH. Install with 'cargo install ai-usagebar'.");
+            }
 
-            return JsonSerializer.Deserialize<UsageJsonRoot>(output);
+            var outputTask = process.StandardOutput.ReadToEndAsync(linkedCts.Token);
+            var errorTask = process.StandardError.ReadToEndAsync(linkedCts.Token);
+
+            try
+            {
+                await process.WaitForExitAsync(linkedCts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+            {
+                if (!process.HasExited) process.Kill();
+                return ErrorRoot("Process timed out after 10 seconds.");
+            }
+
+            var output = await outputTask.ConfigureAwait(false);
+            var stderr = await errorTask.ConfigureAwait(false);
+
+            if (process.ExitCode != 0)
+            {
+                return ErrorRoot($"Process exited with code {process.ExitCode}:\n{stderr.Trim()}");
+            }
+
+            if (string.IsNullOrWhiteSpace(output)) return ErrorRoot("Process returned empty output.");
+
+            try
+            {
+                return JsonSerializer.Deserialize<UsageJsonRoot>(output);
+            }
+            catch (JsonException ex)
+            {
+                return ErrorRoot($"Failed to parse JSON:\n{ex.Message}\n\nOutput was:\n{output}");
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            return null; // Return null on execution/parsing error
+            return ErrorRoot($"Unexpected error:\n{ex.Message}");
         }
+    }
+
+    private static UsageJsonRoot ErrorRoot(string message)
+    {
+        return new UsageJsonRoot
+        {
+            Entries = new System.Collections.Generic.List<UsageJsonEntry>
+            {
+                new()
+                {
+                    Id = "system",
+                    DisplayName = "System Error",
+                    Status = "error",
+                    Error = message
+                }
+            }
+        };
     }
 
     public void Dispose()

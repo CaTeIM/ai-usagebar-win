@@ -46,7 +46,7 @@ public static class StartupService
         }
         catch
         {
-            // Best-effort — never let a startup-toggle failure take down the app.
+            // Best-effort: never let a startup-toggle failure take down the app.
         }
     }
 }

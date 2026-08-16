@@ -51,7 +51,7 @@ public partial class App : Application
             return;
         }
 
-        // No window keeps the process alive — only the tray icon does.
+        // No window keeps the process alive. Only the tray icon does.
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         // Make the app findable in Windows Search via a Start Menu shortcut.
@@ -83,7 +83,7 @@ public partial class App : Application
             }
             catch
             {
-                // The handle is disposed on Quit — that unblocks us; just exit.
+                // The handle is disposed on Quit, which unblocks us; just exit.
             }
         })
         {
@@ -107,7 +107,7 @@ public partial class App : Application
         }
         catch
         {
-            // The other instance may be mid-startup/shutdown — nothing to do.
+            // The other instance may be mid-startup/shutdown, so there is nothing to do.
         }
     }
 
@@ -127,7 +127,7 @@ public partial class App : Application
         _tray.Update(rendered.Severity, rendered.Tooltip);
 
         // Only the popup rebuilds live. The settings form is intentionally not
-        // refreshed on every poll — that would clobber unsaved edits. It is
+        // refreshed on every poll, which would clobber unsaved edits. It is
         // repopulated when opened and again right after a save.
         _popup?.Refresh(cfg, root);
     }

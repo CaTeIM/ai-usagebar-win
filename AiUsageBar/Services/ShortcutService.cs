@@ -7,7 +7,7 @@ namespace AiUsageBar.Services;
 
 /// <summary>Creates a per-user Start Menu shortcut so the app is findable in
 /// Windows Search. Unpackaged single-file <c>.exe</c>s don't show up there on
-/// their own — Search indexes <c>.lnk</c> shortcuts, not loose executables — so
+/// their own (Search indexes <c>.lnk</c> shortcuts, not loose executables), so
 /// we drop one in <c>%APPDATA%\Microsoft\Windows\Start Menu\Programs</c> on
 /// first run. Per-user, so it needs no administrator rights. Best-effort:
 /// failures never crash startup.</summary>
@@ -19,7 +19,7 @@ public static class ShortcutService
     private static string ShortcutPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), ShortcutFileName);
 
-    /// <summary>Path of the running executable — the shortcut's target.</summary>
+    /// <summary>Path of the running executable, the shortcut's target.</summary>
     private static string ExePath => Environment.ProcessPath ?? "";
 
     /// <summary>Create the Start Menu shortcut when missing (or when it points at
@@ -34,7 +34,7 @@ public static class ShortcutService
             var path = ShortcutPath;
             if (File.Exists(path) && TargetOf(path) is { } t
                 && string.Equals(t, exe, StringComparison.OrdinalIgnoreCase))
-                return; // already points here — nothing to do
+                return; // already points here, nothing to do
 
             var dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
@@ -48,7 +48,7 @@ public static class ShortcutService
         }
         catch
         {
-            // Best-effort — a tray app that can't write its shortcut still runs.
+            // Best-effort: a tray app that can't write its shortcut still runs.
         }
     }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace AiUsageBar.Models;
 
 // ---------------------------------------------------------------------------
-// Popup view-model — only vendors with an identified key (Ok, or configured
+// Popup view-model: only vendors with an identified key (Ok, or configured
 // but currently erroring). Login-needed / unconfigured vendors are hidden here
 // and surfaced in the settings window instead.
 // ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ public sealed class Fact
 }
 
 // ---------------------------------------------------------------------------
-// Settings view-model — every supported vendor, configured or not. Editable
+// Settings view-model: every supported vendor, configured or not. Editable
 // fields are mutated in place by the settings form's two-way bindings.
 // ---------------------------------------------------------------------------
 

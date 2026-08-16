@@ -33,7 +33,7 @@ public partial class PopupWindow : Window
             HidePopup();
             return;
         }
-        // The same click that dismissed it also re-fires here — ignore it.
+        // The same click that dismissed it also re-fires here, so ignore it.
         if ((DateTimeOffset.UtcNow - _hiddenAt).TotalMilliseconds < 300) return;
 
         Populate(cfg, root);
@@ -84,7 +84,7 @@ public partial class PopupWindow : Window
 
     /// <summary>Anchor the popup just above the taskbar, horizontally near the
     /// tray click. The work area excludes the taskbar, so its bottom edge is the
-    /// taskbar's top edge (for a bottom taskbar) — pinning the popup there keeps
+    /// taskbar's top edge (for a bottom taskbar). Pinning the popup there keeps
     /// it above the taskbar regardless of where the cursor was.</summary>
     private void PositionAboveTaskbar()
     {
@@ -104,7 +104,7 @@ public partial class PopupWindow : Window
         if (x + w + margin > work.Right) x = work.Right - w - margin;
         if (x < work.Left + margin) x = work.Left + margin;
 
-        // Vertically pin to the bottom of the work area — always above the taskbar.
+        // Vertically pin to the bottom of the work area, always above the taskbar.
         var y = work.Bottom - h - margin;
         if (y < work.Top + margin) y = work.Top + margin;
 

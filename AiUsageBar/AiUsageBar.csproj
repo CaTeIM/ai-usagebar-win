@@ -34,7 +34,7 @@
     <PackageReference Include="H.NotifyIcon.Wpf" Version="2.2.0" />
     <!-- Generate the severity-tinted tray icon bitmap in code. -->
     <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
-    <!-- TOML config — keeps the existing config.toml format compatible. -->
+    <!-- TOML config: keeps the existing config.toml format compatible. -->
     <PackageReference Include="Tomlyn" Version="0.17.0" />
   </ItemGroup>
 

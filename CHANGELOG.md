@@ -30,7 +30,7 @@ SemVer scheme this project shipped with before the rewrite.
 ## 0.3.0
 
 UI-stack rewrite plus new convenience features. Ships as a single
-self-contained `.exe` built by GitHub Actions — no Windows App SDK runtime
+self-contained `.exe` built by GitHub Actions, no Windows App SDK runtime
 needed.
 
 ### Changed

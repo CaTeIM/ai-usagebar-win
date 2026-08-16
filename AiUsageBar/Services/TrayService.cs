@@ -16,7 +16,7 @@ internal sealed class RelayCommand(Action execute) : ICommand
 }
 
 /// <summary>Owns the notification-area icon via H.NotifyIcon.Wpf. Any click (left
-/// or right — there is no context menu) toggles the popup, matching the original.
+/// or right, since there is no context menu) toggles the popup, matching the original.
 /// <c>TaskbarIcon.Icon</c> is a <c>System.Drawing.Icon</c>; <c>ToolTipText</c> is
 /// the hover tooltip; <c>ForceCreate()</c> realizes the icon.</summary>
 public sealed class TrayService : IDisposable

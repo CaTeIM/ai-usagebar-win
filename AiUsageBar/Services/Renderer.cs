@@ -14,10 +14,10 @@ public static class Renderer
         var worstSeverity = Severity.Unknown;
         var tipLines = new List<string>();
 
+        // Every entry the CLI reports is shown, including the synthetic error
+        // entry injected when the binary is missing or fails.
         foreach (var entry in Ordered(root.Entries, root.Primary))
         {
-            if (!ShouldShow(entry, cfg)) continue;
-
             // Compute worst severity
             var entrySeverity = GetWorstSeverity(entry);
             if (entrySeverity > worstSeverity || worstSeverity == Severity.Unknown)
@@ -72,13 +72,6 @@ public static class Renderer
     private static IEnumerable<UsageJsonEntry> Ordered(List<UsageJsonEntry> entries, string? primaryId)
         => entries.OrderBy(r => r.Id != primaryId).ThenBy(r => r.Id);
 
-    private static bool ShouldShow(UsageJsonEntry entry, Config cfg)
-    {
-        if (entry.Status == "ready") return true;
-        // If it's configured in cfg but erroring, show it
-        return cfg.IsConfiguredId(entry.Id);
-    }
-
     private static Severity GetWorstSeverity(UsageJsonEntry entry)
     {
         if (entry.Status != "ready") return Severity.Critical;
@@ -94,8 +87,6 @@ public static class Renderer
         var model = new PopupModel();
         foreach (var entry in Ordered(root.Entries, root.Primary))
         {
-            if (!ShouldShow(entry, cfg)) continue;
-
             if (entry.Status == "ready")
             {
                 model.Vendors.Add(OkCard(entry));

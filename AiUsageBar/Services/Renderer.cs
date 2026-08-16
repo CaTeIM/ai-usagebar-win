@@ -11,7 +11,7 @@ public static class Renderer
 
     public static Rendered Render(UsageJsonRoot root, Config cfg, DateTimeOffset now)
     {
-        var worstSeverity = Severity.Low;
+        var worstSeverity = Severity.Unknown;
         var tipLines = new List<string>();
 
         foreach (var entry in Ordered(root.Entries, root.Primary))
@@ -20,7 +20,7 @@ public static class Renderer
 
             // Compute worst severity
             var entrySeverity = GetWorstSeverity(entry);
-            if (entrySeverity > worstSeverity)
+            if (entrySeverity > worstSeverity || worstSeverity == Severity.Unknown)
             {
                 worstSeverity = entrySeverity;
             }
@@ -81,7 +81,8 @@ public static class Renderer
 
     private static Severity GetWorstSeverity(UsageJsonEntry entry)
     {
-        if (entry.Status != "ready" || entry.Metrics == null || entry.Metrics.Count == 0) return Severity.Low;
+        if (entry.Status != "ready") return Severity.Critical;
+        if (entry.Metrics == null || entry.Metrics.Count == 0) return Severity.Low;
         var severities = entry.Metrics.Select(m => SeverityRules.Parse(m.Severity ?? "low")).ToList();
         return severities.Max();
     }
@@ -192,7 +193,7 @@ public static class Renderer
     }
 }
 
-public enum Severity { Low, Mid, High, Critical }
+public enum Severity { Unknown, Low, Mid, High, Critical }
 
 public static class SeverityRules
 {

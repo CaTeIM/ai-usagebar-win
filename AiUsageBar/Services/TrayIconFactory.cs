@@ -15,11 +15,12 @@ public static class TrayIconFactory
 
     private static (int R, int G, int B) Rgb(Severity s) => s switch
     {
+        Severity.Unknown => (0x9e, 0x9e, 0x9e),   // grey
         Severity.Low => (0x4c, 0xaf, 0x50),       // green
         Severity.Mid => (0xff, 0xc1, 0x07),       // amber
         Severity.High => (0xff, 0x98, 0x00),      // orange
         Severity.Critical => (0xf4, 0x43, 0x36),  // red
-        _ => (0x4c, 0xaf, 0x50),
+        _ => (0x9e, 0x9e, 0x9e),
     };
 
     /// <summary>A 32x32 rounded-square icon tinted by severity. Icons are cached
